@@ -1,12 +1,14 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"net"
+	"os"
 )
 
-//-----------------------------------
-// TCP Server
+//----------------------------------------------------
+// 1. TCP Server
 
 func startTcpServer() {
 	listener, err := net.Listen("tcp", "127.0.0.1:9003")
@@ -21,7 +23,8 @@ func startTcpServer() {
 			panic(err)
 		}
 
-		go func() {
+		// go语言闭包函数对外部变量是以引用的方式引用，所以这里用函数传递conn
+		go func(conn net.Conn) {
 			for {
 				buf := make([]byte, 1024)
 				n, err := conn.Read(buf)
@@ -37,13 +40,113 @@ func startTcpServer() {
 					conn.Write([]byte("Bye!"))
 					conn.Close()
 					break
+				} else {
+					conn.Write([]byte("OK"))
 				}
 			}
-		}()
+		}(conn)
+	}
+}
+
+//----------------------------------------------------
+// 2. TCP Client
+
+func startTcpClient() {
+	conn, err := net.Dial("tcp", "127.0.0.1:9003")
+	if err != nil {
+		panic(err)
 	}
 
+	defer conn.Close()
+
+	reader := bufio.NewReader(os.Stdin)
+	for {
+		data, _, _ := reader.ReadLine()
+		n, err := conn.Write(data)
+		if err != nil {
+			fmt.Println(err)
+			break
+		}
+
+		buf := make([]byte, 1024)
+		n, err = conn.Read(buf)
+		if err != nil {
+			fmt.Println(err)
+			break
+		}
+
+		fmt.Println("Rev:", string(buf[:n]))
+
+		if string(data) == "quit" {
+			break
+		}
+	}
+}
+
+//----------------------------------------------------
+// 3. UDP Server
+
+func startUdpServer() {
+	addr, err := net.ResolveUDPAddr("udp", "127.0.0.1:9003")
+	if err != nil {
+		panic(err)
+	}
+
+	conn, err := net.ListenUDP("udp", addr)
+	if err != nil {
+		panic(err)
+	}
+	defer conn.Close()
+
+	buf := make([]byte, 1024)
+	for {
+		// UDP面向无连接的通信，所以不会针对每个通信建立连接。
+		// UDP Server只是接收报文。
+		n, remoteAddr, err := conn.ReadFromUDP(buf)
+		if err != nil {
+			fmt.Println(err)
+			break
+		}
+
+		fmt.Println(remoteAddr, ": ", string(buf[:n]))
+		conn.WriteToUDP([]byte("OK"), remoteAddr)
+	}
+}
+
+//----------------------------------------------------
+// 4. UDP Client
+
+func startUdpClient() {
+	conn, err := net.Dial("udp", "127.0.0.1:9003")
+	if err != nil {
+		panic(err)
+	}
+
+	defer conn.Close()
+
+	reader := bufio.NewReader(os.Stdin)
+	for {
+		data, _, _ := reader.ReadLine()
+		n, err := conn.Write(data)
+		if err != nil {
+			fmt.Println(err)
+			break
+		}
+
+		buf := make([]byte, 1024)
+		n, err = conn.Read(buf)
+		if err != nil {
+			fmt.Println(err)
+			break
+		}
+
+		fmt.Println("Rev:", string(buf[:n]))
+
+		if string(data) == "quit" {
+			break
+		}
+	}
 }
 
 func main() {
-	startTcpServer()
 }
