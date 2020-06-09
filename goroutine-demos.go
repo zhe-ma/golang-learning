@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"runtime"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -332,7 +333,59 @@ func testCallOnce() {
 }
 
 // ---------------------------------------------------------------------------
-// 9. deadlock
+// 10. sync.Cond
+
+// 条件变量和c++中的std::condition_variable使用类似，需要配合锁一起使用。
+func testConditionVariable() {
+	cv := sync.NewCond(&sync.Mutex{})
+	flag := true
+
+	go func() {
+		time.Sleep(time.Second * 3)
+		cv.L.Lock()
+		time.Sleep(time.Second * 3)
+		flag = false
+		cv.Signal()
+		cv.L.Unlock()
+	}()
+
+	cv.L.Lock()
+	for flag { // 防止假唤醒
+		fmt.Println("Wait")
+		cv.Wait()
+	}
+	fmt.Println("End")
+	cv.L.Unlock()
+}
+
+// ---------------------------------------------------------------------------
+// 11. sync/atomic
+
+func testAtomic() {
+	var val int32 = 1
+
+	// 原子读取一个变量的值，否则读取一个变量的时候可能被其他线程打断。
+	n := atomic.LoadInt32(&val)
+	fmt.Println(n)
+
+	atomic.AddInt32(&val, 2)
+	fmt.Println(val)
+
+	// 原子地对一个变量赋值。
+	atomic.StoreInt32(&val, 3)
+	fmt.Println(val)
+
+	// 原子地对一个变量赋值，并且返回旧值。
+	atomic.SwapInt32(&val, 4)
+	fmt.Println(val)
+
+	// 将val和old值对比，相等时则和新值进行交换。
+	s := atomic.CompareAndSwapInt32(&val, 4, 6)
+	fmt.Println(s, val)
+}
+
+// ---------------------------------------------------------------------------
+// 12. deadlock
 
 func testDeadLock() {
 	// 可以输出 1
@@ -366,5 +419,4 @@ func testDeadLock2() {
 // ---------------------------------------------------------------------------
 
 func main() {
-	testDeadLock2()
 }
