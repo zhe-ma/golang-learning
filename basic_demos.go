@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"os"
 	"reflect"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -1139,6 +1140,28 @@ func testReflect() {
 }
 
 //---------------------------------------
+// 32. regex
+
+func testRegex() {
+	r, err := http.Get("https://www.haomagujia.com/")
+	defer r.Body.Close()
+	if err != nil {
+		panic(err)
+	}
+
+	data, err := ioutil.ReadAll(r.Body)
+	html := string(data)
+	fmt.Print(html)
+
+	reg := regexp.MustCompile(`1[3-9]\d{9}`)
+	s := reg.FindAllStringSubmatch(html, -1)
+	for _, x := range s {
+		fmt.Println(x[0])
+	}
+}
+
+//---------------------------------------
 
 func main() {
+	testRegex()
 }
