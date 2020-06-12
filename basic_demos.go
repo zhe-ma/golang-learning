@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"crypto/md5"
+	"encoding/csv"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -17,6 +18,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unsafe"
 )
 
 //---------------------------------------
@@ -1161,7 +1163,74 @@ func testRegex() {
 }
 
 //---------------------------------------
+// 33. csv
+
+func testCSV() {
+	records := [][]string{
+		{"Id", "Name", "Age"},
+		{"1", "A\"\"", "11"},
+		{"2", "B D", "12"},
+		{"3", "C,M", "13"},
+	}
+
+	w := csv.NewWriter(os.Stdout)
+	for _, record := range records {
+		if err := w.Write(record); err != nil {
+			panic(err)
+		}
+	}
+
+	w.Flush()
+
+	stringBuilder := strings.Builder{}
+	w2 := csv.NewWriter(&stringBuilder)
+	w2.WriteAll(records)
+	fmt.Println(stringBuilder.String())
+
+	r := csv.NewReader(strings.NewReader(stringBuilder.String()))
+	for {
+		record, err := r.Read()
+		if err == io.EOF {
+			break
+		}
+
+		if err != nil {
+			panic(err)
+		}
+
+		fmt.Println(record)
+	}
+}
+
+//---------------------------------------
+// 34. unsafe
+
+func testUnsafe() {
+	var a1 int32
+	fmt.Println(unsafe.Sizeof(a1)) // 4
+
+	type T struct {
+		a byte  // 1
+		b int32 // 4
+		c int64 // 8
+	}
+
+	// 内存对齐
+	a2 := T{1, 4, 8}
+	fmt.Println(unsafe.Sizeof(a2)) // 16
+
+	// 查看对齐方式
+	fmt.Println(unsafe.Alignof(a2))   // 8
+	fmt.Println(unsafe.Alignof(a2.a)) // 1
+	fmt.Println(unsafe.Alignof(a2.b)) // 4
+	fmt.Println(unsafe.Alignof(a2.c)) // 8
+
+	a3 := new(T)
+	fmt.Println(unsafe.Sizeof(a3)) // 8
+}
+
+//---------------------------------------
 
 func main() {
-	testRegex()
+	testUnsafe()
 }
