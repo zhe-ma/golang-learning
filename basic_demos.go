@@ -1057,6 +1057,8 @@ func (s *RSon) Set(name string, age int, school string) {
 	s.School = school
 }
 
+// interface变量主要是(type, value)组成
+// 反射主要就是用来 检测存储在接口变量内部 pair(type, value)的一种机制
 func testReflect() {
 	var object interface{}
 	object = RSon{RParent{"AAA", 14}, "BBCC"}
@@ -1227,6 +1229,19 @@ func testUnsafe() {
 
 	a3 := new(T)
 	fmt.Println(unsafe.Sizeof(a3)) // 8
+
+	a4 := T{1, 2, 3}
+	p := unsafe.Pointer(&a4)
+	// uintptr是golang的内置类型，是能存储指针的整型
+	// uintptr 就是一个16进制的整数，这个数字表示对象的地址，但是uintptr没有指针的语义
+	rawPtr := uintptr(p)
+	fmt.Printf("%x\n", rawPtr)
+	fmt.Println((*byte)(p))
+
+	rawPtr2 := rawPtr + unsafe.Offsetof(a4.b) // 偏移到b
+	p2 := unsafe.Pointer(rawPtr2)
+	*(*int32)(p2) = 100
+	fmt.Println(a4) // {1 100 3}
 }
 
 //---------------------------------------
