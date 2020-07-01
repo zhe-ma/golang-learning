@@ -1245,7 +1245,32 @@ func testUnsafe() {
 }
 
 //---------------------------------------
+// 35. 断言
+
+type ImageIface interface {
+	Print()
+}
+
+type BigImage struct {
+	name  string
+	color string
+}
+
+func (b *BigImage) Print() {
+	fmt.Println(b.name, b.color)
+}
+
+func testTypeAssert() {
+	var i ImageIface = &BigImage{"Big", "green"}
+	i.Print()
+
+	b := i.(*BigImage)
+	fmt.Println(b.name)
+	fmt.Println(b.color)
+}
+
+//---------------------------------------
 
 func main() {
-	testUnsafe()
+	testTypeAssert()
 }
