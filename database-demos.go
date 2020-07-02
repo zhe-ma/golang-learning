@@ -2,7 +2,10 @@ package main
 
 import (
 	"fmt"
+	"strconv"
+	"time"
 
+	"github.com/garyburd/redigo/redis"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
 )
@@ -18,8 +21,9 @@ func (Product) TableName() string {
 }
 
 // -----------------------------------------------------------
+// 1. gorm crud
 
-func testCRUD() {
+func testGormCrud() {
 	// db, err := gorm.Open("sqlite3", "test.db")
 	db, err := gorm.Open("sqlite3", ":memory:")
 	if err != nil {
@@ -76,42 +80,70 @@ func testCRUD() {
 }
 
 // -----------------------------------------------------------
+// 2. redis
 
-func main() {
-	testCRUD()
+func testRedis() {
+	conn, err := redis.Dial("tcp", "10.196.102.145:6379")
+	if err != nil {
+		panic(err)
+	}
+	defer conn.Close()
+
+	r, err := conn.Do("set", "key1", "value1")
+	r, err = conn.Do("get", "key1")
+	s, _ := redis.String(r, err)
+	fmt.Println(s)
+
+	r, err = conn.Do("rpush", "key2", 11, 2, 3, 4)
+	r, err = conn.Do("lrange", "key2", 0, -1)
+	ss, _ := redis.Ints(r, err)
+	fmt.Println(ss)
+
+	// 设置超时时间
+	_, err = conn.Do("expire", "key2", 5)
+	time.Sleep(time.Second * 5)
+	r, err = conn.Do("lrange", "key2", 0, -1)
+	ss, _ = redis.Ints(r, err)
+	fmt.Println(ss)
 }
 
-// type Product struct {
-// 	gorm.Model
-// 	Code  string
-// 	Price uint
-// }
+// -----------------------------------------------------------
+// 3. Redis connection pool
 
-// func main() {
-// 	// db, err := gorm.Open("sqlite3", ":memory:")
-// 	db, err := gorm.Open("sqlite3", "test.db")
+func testRedisConnPool() {
+	pool := &redis.Pool{
+		// 最大活动连接数
+		MaxActive: 100,
 
-// 	if err != nil {
-// 		panic("连接数据库失败")
-// 	}
-// 	defer db.Close()
+		// 最大闲置连接数
+		MaxIdle: 20,
 
-// 	// 自动迁移模式
-// 	db.AutoMigrate(&Product{})
+		//闲置连接的超时时间
+		IdleTimeout: time.Second * 100,
 
-// 	// 创建
-// 	db.Create(&Product{Code: "L1212", Price: 1000})
+		Dial: func() (redis.Conn, error) {
+			conn, err := redis.Dial("tcp", "10.196.102.145:6379")
+			return conn, err
+		},
+	}
+	defer pool.Close()
 
-// 	// 读取
-// 	var product Product
-// 	db.First(&product, 1)                   // 查询id为1的product
-// 	db.First(&product, "code = ?", "L1212") // 查询code为l1212的product
+	for i := 0; i < 10; i++ {
+		go func() {
+			conn := pool.Get()
+			defer conn.Close()
 
-// 	fmt.Println(product)
+			r, err := conn.Do("set", "key"+strconv.Itoa(i), i)
+			s, _ := redis.String(r, err)
+			fmt.Println(s)
+		}()
+	}
 
-// 	// 更新 - 更新product的price为2000
-// 	db.Model(&product).Update("Price", 2000)
+	time.Sleep(3 * time.Second)
+}
 
-// 	// 删除 - 删除product
-// 	db.Delete(&product)
-// }
+// -----------------------------------------------------------
+
+func main() {
+	testRedisConnPool()
+}
