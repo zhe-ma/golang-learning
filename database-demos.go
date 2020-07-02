@@ -65,8 +65,14 @@ func testCRUD() {
 	db.First(&product, "code = ?", "B") // 查询code为B的数据
 	fmt.Println(product)
 
-	// 	// 更新 - 更新product的price为2000
-	// 	db.Model(&product).Update("Price", 2000)
+	// 5. Delete data.
+	db.Delete(&product)                               // 如果有deleteAt字段，软删除
+	db.Unscoped().Where(`code = "B"`).Find(&products) // 查看软删除字段
+	fmt.Println(products)
+
+	db.Unscoped().Delete(&product) // 真正删除
+	db.Unscoped().Where(`code = "B"`).Find(&products)
+	fmt.Println(products)
 }
 
 // -----------------------------------------------------------
