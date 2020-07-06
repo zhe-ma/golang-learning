@@ -6,7 +6,7 @@ import (
 )
 
 func main() {
-	seed := engine.NewFetcher("http://www.zhenai.com/zhenghun", new(parser.NilParser))
+	seed := engine.NewFetcher("http://www.zhenai.com/zhenghun", new(parser.CitylistParser))
 	engine.Run(seed)
 	// engine.Run()
 	// content, _ := util.Fetch("http://www.zhenai.com/zhenghun")
