@@ -1,13 +1,9 @@
 package main
 
-import (
-	"zhenai-spider/engine"
-	"zhenai-spider/parser"
-)
-
 func main() {
-	seed := engine.NewFetcher("http://www.zhenai.com/zhenghun", new(parser.CitylistParser))
-	engine.Run(seed)
+	// seed := engine.NewFetcher("http://www.zhenai.com/zhenghun", new(parser.CityParser))
+	// engine.Run(seed)
+
 	// engine.Run()
 	// content, _ := util.Fetch("http://www.zhenai.com/zhenghun")
 

@@ -436,6 +436,52 @@ func testJson() {
 	os.Remove("./test.json")
 }
 
+func testJson2() {
+	m := make(map[string]interface{})
+	m["type"] = "T"
+	m["age"] = 16
+	m["male"] = true
+	s, _ := json.Marshal(m)
+	fmt.Println(string(s))
+
+	m2 := make(map[string]interface{})
+	json.Unmarshal(s, &m2)
+	fmt.Println(m2)
+
+	var a string
+	a = m2["type"].(string)
+	fmt.Println(a)
+
+	var b bool
+	b = m2["male"].(bool)
+	fmt.Printf("%T,%v\n", b, b)
+
+	s2 := `
+		{ "memberListData":{
+			 "currentPage":1,
+			 "memberList":[
+					{
+						"sex":"male"
+					},
+					{
+						"sex":"female"
+					}
+				]
+			}
+		}`
+
+	data := make(map[string]interface{})
+	json.Unmarshal([]byte(s2), &data)
+	memberListData := data["memberListData"].(map[string]interface{})
+	// !这里的类型是[]interface{}，不是[]map[string]interface{}.
+	memberList := memberListData["memberList"].([]interface{})
+	for _, member := range memberList {
+		var sex string
+		sex = member.(map[string]interface{})["sex"].(string)
+		fmt.Println(sex)
+	}
+}
+
 //---------------------------------------
 // 15. Channel
 
@@ -1272,5 +1318,5 @@ func testTypeAssert() {
 //---------------------------------------
 
 func main() {
-	testTypeAssert()
+	testJson2()
 }
