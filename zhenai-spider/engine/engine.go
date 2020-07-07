@@ -2,11 +2,11 @@ package engine
 
 import "fmt"
 
-func Run(seeds ...*Fetcher) {
+func Run(seeds ...Fetcher) {
 	fmt.Println("Engine Run")
 
 	// fetchers := make([]*Fetcher)
-	fetchers := []*Fetcher{}
+	fetchers := []Fetcher{}
 
 	for _, seed := range seeds {
 		fetchers = append(fetchers, seed)
@@ -16,6 +16,9 @@ func Run(seeds ...*Fetcher) {
 		fetcher := fetchers[0]
 		fetchers = fetchers[1:]
 
-		fetcher.Run()
+		subFetchers := fetcher.Run()
+		if subFetchers != nil {
+			fetchers = append(fetchers, subFetchers...)
+		}
 	}
 }
