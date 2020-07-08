@@ -1,7 +1,10 @@
 package main
 
-import "zhenai-spider/engine"
+import (
+	"zhenai-spider/engine"
+	"zhenai-spider/fetcher"
+)
 
 func main() {
-	engine.Run(&engine.CityFetcher{"http://www.zhenai.com/zhenghun"})
+	engine.Run(&fetcher.CityFetcher{URL: "http://www.zhenai.com/zhenghun"})
 }

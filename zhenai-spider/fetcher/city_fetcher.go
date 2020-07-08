@@ -1,4 +1,4 @@
-package engine
+package fetcher
 
 import (
 	"regexp"
@@ -9,7 +9,7 @@ type CityFetcher struct {
 	URL string
 }
 
-func (f *CityFetcher) Run() (fetchers []Fetcher) {
+func (f *CityFetcher) Run() (result Result) {
 	content, err := util.HttpRequestGet(f.URL)
 	if err != nil {
 		util.WarnLog.Println(err)
@@ -20,10 +20,12 @@ func (f *CityFetcher) Run() (fetchers []Fetcher) {
 	reg := regexp.MustCompile(`<a href="(http://www.zhenai.com/zhenghun/[a-z0-9]+)"[^>]*>([^<]+)</a>`)
 	matches := reg.FindAllSubmatch(content, -1)
 	for _, match := range matches {
-		fetcher := &ProfileFetcher{string(match[1])}
-		fetchers = append(fetchers, fetcher)
+		fetcher := &ProfileFetcher{URL: string(match[1])}
+		result.SubFetchers = append(result.SubFetchers, fetcher)
+		result.Items = append(result.Items, string(match[2]))
 
-		if len(fetchers) > 1 {
+		if len(result.SubFetchers) > 1 {
+			util.TraceLog.Println("Finish fetch")
 			return
 		}
 	}

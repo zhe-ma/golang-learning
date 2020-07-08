@@ -1,12 +1,16 @@
 package engine
 
-import "fmt"
+import (
+	"fmt"
+	"zhenai-spider/fetcher"
+	"zhenai-spider/util"
+)
 
-func Run(seeds ...Fetcher) {
-	fmt.Println("Engine Run")
+func Run(seeds ...fetcher.Fetcher) {
+	util.TraceLog.Println("Engine Run")
 
 	// fetchers := make([]*Fetcher)
-	fetchers := []Fetcher{}
+	fetchers := []fetcher.Fetcher{}
 
 	for _, seed := range seeds {
 		fetchers = append(fetchers, seed)
@@ -16,9 +20,13 @@ func Run(seeds ...Fetcher) {
 		fetcher := fetchers[0]
 		fetchers = fetchers[1:]
 
-		subFetchers := fetcher.Run()
-		if subFetchers != nil {
-			fetchers = append(fetchers, subFetchers...)
+		result := fetcher.Run()
+		if result.SubFetchers != nil {
+			fetchers = append(fetchers, result.SubFetchers...)
+		}
+
+		for _, item := range result.Items {
+			fmt.Printf("item : %s\n", item)
 		}
 	}
 }

@@ -1,8 +1,7 @@
-package engine
+package fetcher
 
 import (
 	"encoding/json"
-	"fmt"
 	"regexp"
 	"zhenai-spider/model"
 	"zhenai-spider/util"
@@ -12,7 +11,7 @@ type ProfileFetcher struct {
 	URL string
 }
 
-func (f *ProfileFetcher) Run() (fetchers []Fetcher) {
+func (f *ProfileFetcher) Run() (result Result) {
 	content, err := util.HttpRequestGet(f.URL)
 	if err != nil {
 		util.WarnLog.Println(err)
@@ -56,7 +55,7 @@ func (f *ProfileFetcher) Run() (fetchers []Fetcher) {
 		profiles = append(profiles, profile)
 	}
 
-	fmt.Println(profiles)
+	result.Items = append(result.Items, profiles)
 
 	return
 }
