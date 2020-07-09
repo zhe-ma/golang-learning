@@ -17,3 +17,6 @@ func (s *SimpleScheduler) Submit(f fetcher.Fetcher) {
 func (s *SimpleScheduler) FetchInChannel() chan fetcher.Fetcher {
 	return s.fetcherIn
 }
+
+func (s *SimpleScheduler) WorkerReady(workerChannel chan fetcher.Fetcher) {
+}

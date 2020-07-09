@@ -20,7 +20,7 @@ func (e *ConcurrentEngine) Run(seeds ...fetcher.Fetcher) {
 	e.Scheduler.Run()
 
 	for i := 0; i < e.WorkerCount; i++ {
-		createWorker(e.Scheduler.FetchInChannel(), resultOut)
+		createWorker(e.Scheduler.FetchInChannel(), e.Scheduler, resultOut)
 	}
 
 	for _, seed := range seeds {
@@ -43,11 +43,15 @@ func (e *ConcurrentEngine) Run(seeds ...fetcher.Fetcher) {
 	}
 }
 
-func createWorker(fetcherIn chan fetcher.Fetcher, resultOut chan fetcher.Result) {
+func createWorker(fetcherIn chan fetcher.Fetcher, s scheduler.Scheduler, resultOut chan fetcher.Result) {
 	go func() {
-		fetcher := <-fetcherIn
+		for {
+			s.WorkerReady(fetcherIn)
 
-		result := fetcher.Run()
-		resultOut <- result
+			fetcher := <-fetcherIn
+
+			result := fetcher.Run()
+			resultOut <- result
+		}
 	}()
 }

@@ -10,7 +10,8 @@ func main() {
 	// simpleEngine := engine.SimpleEngine{}
 	// simpleEngine.Run(&fetcher.CityFetcher{URL: "http://www.zhenai.com/zhenghun"})
 
-	scheduler := &scheduler.SimpleScheduler{}
+	// scheduler := &scheduler.SimpleScheduler{}
+	scheduler := &scheduler.QueuedScheduler{}
 
 	concurrentEngine := engine.ConcurrentEngine{WorkerCount: 10, Scheduler: scheduler}
 	concurrentEngine.Run(&fetcher.CityFetcher{URL: "http://www.zhenai.com/zhenghun"})
