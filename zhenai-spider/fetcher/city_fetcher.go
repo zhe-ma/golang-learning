@@ -2,6 +2,7 @@ package fetcher
 
 import (
 	"regexp"
+	"time"
 	"zhenai-spider/util"
 )
 
@@ -9,7 +10,11 @@ type CityFetcher struct {
 	URL string
 }
 
+var cityRateLimiter = time.Tick(time.Second)
+
 func (f *CityFetcher) Run() (result Result) {
+	<-cityRateLimiter
+
 	content, err := util.HttpRequestGet(f.URL)
 	if err != nil {
 		util.WarnLog.Println(err)

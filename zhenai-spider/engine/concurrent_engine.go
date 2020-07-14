@@ -1,8 +1,9 @@
 package engine
 
 import (
-	"fmt"
+	"zhenai-spider/database"
 	"zhenai-spider/fetcher"
+	"zhenai-spider/model"
 	"zhenai-spider/scheduler"
 	"zhenai-spider/util"
 )
@@ -10,6 +11,7 @@ import (
 type ConcurrentEngine struct {
 	WorkerCount int
 	Scheduler   scheduler.Scheduler
+	DataSaver   chan database.ElasticItem
 }
 
 func (e *ConcurrentEngine) Run(seeds ...fetcher.Fetcher) {
@@ -33,7 +35,20 @@ func (e *ConcurrentEngine) Run(seeds ...fetcher.Fetcher) {
 		result := <-resultOut
 
 		for _, item := range result.Items {
-			fmt.Printf("item : %s\n", item)
+
+			if profiles, ok := item.(*[]model.Profile); ok {
+				for _, profile := range *profiles {
+					util.InfoLog.Println("Spide profile:", profile)
+
+					if memberEixst(profile.MemberId) {
+						util.InfoLog.Println("Member eixsts, ID:", profile.MemberId)
+						continue
+					}
+
+					elasticItem := database.ElasticItem{Index: "zhenai", Type: "profiles", Data: profile}
+					e.DataSaver <- elasticItem
+				}
+			}
 		}
 
 		subFetchers := result.SubFetchers
@@ -54,4 +69,15 @@ func createWorker(fetcherIn chan fetcher.Fetcher, s scheduler.Scheduler, resultO
 			resultOut <- result
 		}
 	}()
+}
+
+var memberIdCache = make(map[float64]bool)
+
+func memberEixst(id float64) bool {
+	if memberIdCache[id] {
+		return true
+	}
+
+	memberIdCache[id] = true
+	return false
 }

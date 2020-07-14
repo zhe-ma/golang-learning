@@ -2,11 +2,14 @@ package engine
 
 import (
 	"fmt"
+	"zhenai-spider/database"
 	"zhenai-spider/fetcher"
+	"zhenai-spider/model"
 	"zhenai-spider/util"
 )
 
 type SimpleEngine struct {
+	DataSaver chan database.ElasticItem
 }
 
 func (e *SimpleEngine) Run(seeds ...fetcher.Fetcher) {
@@ -29,6 +32,14 @@ func (e *SimpleEngine) Run(seeds ...fetcher.Fetcher) {
 
 		for _, item := range result.Items {
 			fmt.Printf("item : %s\n", item)
+
+			if profiles, ok := item.(*[]model.Profile); ok {
+				for _, profile := range *profiles {
+					fmt.Println(profile)
+					elasticItem := database.ElasticItem{Index: "zhenai", Type: "profiles", Data: profile}
+					e.DataSaver <- elasticItem
+				}
+			}
 		}
 	}
 }

@@ -3,6 +3,7 @@ package fetcher
 import (
 	"encoding/json"
 	"regexp"
+	"time"
 	"zhenai-spider/model"
 	"zhenai-spider/util"
 )
@@ -11,7 +12,11 @@ type ProfileFetcher struct {
 	URL string
 }
 
+var profileRateLimiter = time.Tick(time.Second)
+
 func (f *ProfileFetcher) Run() (result Result) {
+	<-profileRateLimiter
+
 	content, err := util.HttpRequestGet(f.URL)
 	if err != nil {
 		util.WarnLog.Println(err)
@@ -40,6 +45,7 @@ func (f *ProfileFetcher) Run() (result Result) {
 	for _, member := range memberList {
 		memberData := member.(map[string]interface{})
 		var profile model.Profile
+		profile.MemberId = memberData["memberID"].(float64)
 		profile.NickName = memberData["nickName"].(string)
 		profile.Age = int32(memberData["age"].(float64))
 		profile.Height = int32(memberData["height"].(float64))
@@ -55,7 +61,6 @@ func (f *ProfileFetcher) Run() (result Result) {
 		profiles = append(profiles, profile)
 	}
 
-	result.Items = append(result.Items, profiles)
-
+	result.Items = append(result.Items, &profiles)
 	return
 }
