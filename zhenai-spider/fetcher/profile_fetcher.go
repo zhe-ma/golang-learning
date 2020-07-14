@@ -23,6 +23,13 @@ func (f *ProfileFetcher) Run() (result Result) {
 		return
 	}
 
+	parseProfiles(content, &result)
+	parseSubFetchers(content, &result)
+
+	return
+}
+
+func parseProfiles(content []byte, result *Result) {
 	reg := regexp.MustCompile(`<script>window\.__INITIAL_STATE__=(.+);\(function\(\)`)
 	matches := reg.FindAllSubmatch(content, -1)
 	if len(matches) == 0 {
@@ -30,7 +37,7 @@ func (f *ProfileFetcher) Run() (result Result) {
 	}
 
 	jsonMap := make(map[string]interface{})
-	err = json.Unmarshal(matches[0][1], &jsonMap)
+	err := json.Unmarshal(matches[0][1], &jsonMap)
 	if err != nil {
 		util.WarnLog.Println("Failed to parse profile json:", err)
 		return
@@ -62,5 +69,14 @@ func (f *ProfileFetcher) Run() (result Result) {
 	}
 
 	result.Items = append(result.Items, &profiles)
-	return
+}
+
+func parseSubFetchers(content []byte, result *Result) {
+	reg := regexp.MustCompile(`(http://www.zhenai.com/zhenghun/[a-zA-Z]*/[\d]+)`)
+	matches := reg.FindAllSubmatch(content, -1)
+
+	for _, match := range matches {
+		fetcher := &ProfileFetcher{URL: string(match[1])}
+		result.SubFetchers = append(result.SubFetchers, fetcher)
+	}
 }

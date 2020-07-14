@@ -17,7 +17,7 @@ var (
 // 所有被编译器发现的 init 函数都会安排在 main 函数之前执行。
 // init 函数用在设置包、初始化变量或其他要在程序运行前优先完成的引导工作。
 // 这里就说的很明确了，只要能被编译器发现，都会在 main 函数之前执行，也就是不会在每次引用改包的时候都执行。
-func init() {
+func InitLogging() {
 	exist, err := PathExists("./log")
 	if err != nil {
 		log.Fatalln("Failed to check log dir:", err)

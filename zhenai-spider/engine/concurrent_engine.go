@@ -40,20 +40,29 @@ func (e *ConcurrentEngine) Run(seeds ...fetcher.Fetcher) {
 				for _, profile := range *profiles {
 					util.InfoLog.Println("Spide profile:", profile)
 
-					if memberEixst(profile.MemberId) {
+					if memberExist(profile.MemberId) {
 						util.InfoLog.Println("Member eixsts, ID:", profile.MemberId)
 						continue
 					}
 
 					elasticItem := database.ElasticItem{Index: "zhenai", Type: "profiles", Data: profile}
-					e.DataSaver <- elasticItem
+
+					if e.DataSaver != nil {
+						e.DataSaver <- elasticItem
+					}
 				}
 			}
 		}
 
 		subFetchers := result.SubFetchers
-		for _, fetcher := range subFetchers {
-			e.Scheduler.Submit(fetcher)
+		for _, subFetcher := range subFetchers {
+			if f, ok := subFetcher.(*fetcher.ProfileFetcher); ok {
+				if urlExist(f.URL) {
+					continue
+				}
+			}
+
+			e.Scheduler.Submit(subFetcher)
 		}
 	}
 }
@@ -73,11 +82,22 @@ func createWorker(fetcherIn chan fetcher.Fetcher, s scheduler.Scheduler, resultO
 
 var memberIdCache = make(map[float64]bool)
 
-func memberEixst(id float64) bool {
+func memberExist(id float64) bool {
 	if memberIdCache[id] {
 		return true
 	}
 
 	memberIdCache[id] = true
+	return false
+}
+
+var urlCache = make(map[string]bool)
+
+func urlExist(url string) bool {
+	if urlCache[url] {
+		return true
+	}
+
+	urlCache[url] = true
 	return false
 }
