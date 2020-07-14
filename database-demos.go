@@ -1,13 +1,16 @@
 package main
 
 import (
+	"context"
 	"fmt"
+	"reflect"
 	"strconv"
 	"time"
 
 	"github.com/garyburd/redigo/redis"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
+	"github.com/olivere/elastic"
 )
 
 type Product struct {
@@ -140,6 +143,111 @@ func testRedisConnPool() {
 	}
 
 	time.Sleep(3 * time.Second)
+}
+
+// -----------------------------------------------------------
+// 4. ElasticSearch
+
+const host = "http://10.196.102.145:9200"
+
+type Employee struct {
+	Name      string   `json:"name"`
+	Age       int      `json:"age"`
+	Comment   string   `json:"comment"`
+	Interests []string `json:"interests"`
+}
+
+func PanicError(err error) {
+	if err != nil {
+		panic(err)
+	}
+}
+
+func PrintEmployee(result *elastic.SearchResult, err error) {
+	if err != nil {
+		panic(err)
+	}
+
+	var t Employee
+	for _, item := range result.Each(reflect.TypeOf(t)) {
+		e := item.(Employee)
+		fmt.Println(e)
+	}
+}
+
+func TestElasticSearch() {
+	client, err := elastic.NewClient(elastic.SetURL(host), elastic.SetSniff(false))
+	PanicError(err)
+
+	version, err := client.ElasticsearchVersion(host)
+	PanicError(err)
+	fmt.Println("Version:", version)
+
+	ids := []string{}
+
+	// 1. 创建数据
+	e1 := Employee{"Jame", 20, "I am a boy.", []string{"music", "book"}}
+	resp, err := client.Index().Index("bankdata").Type("employee").BodyJson(e1).Do(context.Background())
+	PanicError(err)
+	ids = append(ids, resp.Id)
+	fmt.Println("New inserted id:", resp.Id)
+
+	e2 := `{"name": "John", "age": 45, "comment":"I like sleeping", "interests":["Sleep", "book"]}`
+	resp, err = client.Index().Index("bankdata").Type("employee").BodyJson(e2).Do(context.Background())
+	PanicError(err)
+	ids = append(ids, resp.Id)
+	fmt.Println("New inserted id:", resp.Id)
+
+	e3 := `{"name": "John", "age": 20, "comment":"I like swimming", "interests":["swim", "book"]}`
+	resp, err = client.Index().Index("bankdata").Type("employee").BodyJson(e3).Do(context.Background())
+	PanicError(err)
+	ids = append(ids, resp.Id)
+	fmt.Println("New inserted id:", resp.Id)
+
+	// 2. 修改数据
+	_, err = client.Update().Index("bankdata").Type("employee").Id(ids[1]).Doc(map[string]interface{}{"age": 88}).Do(context.Background())
+	PanicError(err)
+
+	// 3. 查找数据
+	result, err := client.Get().Index("bankdata").Type("employee").Id(ids[0]).Do(context.Background())
+	PanicError(err)
+	if result.Found {
+		fmt.Println(string(result.Source))
+	}
+
+	// 4. 查询数据
+	// 取所有数据
+	r, err := client.Search("bankdata").Type("employee").Do(context.Background())
+	fmt.Println("All data:")
+	PrintEmployee(r, err)
+
+	q := elastic.NewQueryStringQuery("name: John")
+	r, err = client.Search("bankdata").Type("employee").Query(q).Do(context.Background())
+	fmt.Println("John data:")
+	PrintEmployee(r, err)
+
+	// 年龄大于三十的
+	boolQ := elastic.NewBoolQuery()
+	boolQ.Must(elastic.NewMatchQuery("name", "John"))
+	boolQ.Filter(elastic.NewRangeQuery("age").Gt(30))
+	r, err = client.Search("bankdata").Type("employee").Query(boolQ).Do(context.Background())
+	fmt.Println("John && age > 30:")
+	PrintEmployee(r, err)
+
+	// comment中含有swimming, sleeping
+	matchQ := elastic.NewMatchPhraseQuery("comment", "swimming sleeping")
+	r, err = client.Search("bankdata").Type("employee").Query(matchQ).Do(context.Background())
+	fmt.Println("Contain swimming, sleeping:")
+	PrintEmployee(r, err)
+
+	// 分页
+	r, err = client.Search("bankdata").Type("employee").Size(1).From(2).Do(context.Background())
+	fmt.Println("Paging:")
+	PrintEmployee(r, err)
+
+	// 5. 删除数据
+	_, err = client.Delete().Index("bankdata").Type("employee").Id(ids[1]).Do(context.Background())
+	PanicError(err)
 }
 
 // -----------------------------------------------------------
