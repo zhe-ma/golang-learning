@@ -7,7 +7,6 @@ type Profile struct {
 	Height     int32
 	Education  string
 	Sex        string
-	LiveCity   string
 	WorkCity   string
 	Occutation string
 	Salary     string

@@ -3,22 +3,14 @@ package main
 import (
 	"fmt"
 	"net/http"
-	"text/template"
+	"zhenai-spider/frontend/controller"
 )
 
-func hello(w http.ResponseWriter, r *http.Request) {
-	tmpl, err := template.ParseFiles("view/index.html")
-	if err != nil {
-		fmt.Println("Failed to parse index.html template.", err)
-		return
-	}
-
-	tmpl.Execute(w, "World")
-}
-
 func main() {
-	http.HandleFunc("/", hello)
-	err := http.ListenAndServe("127.0.0.1:9300", nil)
+
+	http.Handle("/search", controller.NewSearchResultHandler("view/index.html", "http://10.196.102.145:9200"))
+
+	err := http.ListenAndServe(":9300", nil)
 	if err != nil {
 		fmt.Println("Failed to start HTTP server, error:", err)
 	}

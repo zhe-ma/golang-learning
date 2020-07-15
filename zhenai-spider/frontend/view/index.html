@@ -1,11 +1,51 @@
 <!DOCTYPE html>
 
+<html lang="en">
+
 <head>
-  <title>Hello</title>
+  <meta charset="UTF-8">
+  <title>展示</title>
 </head>
 
 <body>
-  <p>Hello {{.}}</p>
-</body>
+  <div align="middle">
+    <input type="text" maxlength="100" style="width: 500px" name="query" value="{{.QueryString}}">
+    <button type="submit">搜索</button>
+  </div>
 
+  <div align="middle">
+    <h2>共搜索到结果约为{{.Hints}}个。显示从{{.Start}}起共{{len .Items}}个。</h2>
+
+  </div>
+
+  <div align="middle">
+    <table>
+      <tbody>
+        {{range .Items}}
+        <tr>
+          <td>{{.NickName}}</td>
+          <td>{{.Age}}</td>
+          <td>{{.Height}}</td>
+          <td>{{.Education}}</td>
+          <td>{{.Sex}}</td>
+          <td>{{.WorkCity}}</td>
+          <td>{{.Occutation}}</td>
+          <td>{{.Salary}}</td>
+        </tr>
+
+        {{else}}
+        <div>没有找到相关用户</div>
+        {{end}}
+      </tbody>
+    </table>
+
+    <div align="middle">
+      {{if ge .PrevFrom 0}}
+      <a href="search?query={{.QueryString}}&from={{.PrevFrom}}">上一页</a>
+      {{end}}
+      <a href="search?query={{.QueryString}}&from={{.NextFrom}}">下一页</a>
+    </div>
+  </div>
+
+</body>
 </html>
