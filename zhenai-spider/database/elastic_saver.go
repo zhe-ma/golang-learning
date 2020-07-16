@@ -4,7 +4,7 @@ import (
 	"context"
 	"zhenai-spider/util"
 
-	"github.com/olivere/elastic"
+	"github.com/olivere/elastic/v7"
 )
 
 type ElasticItem struct {

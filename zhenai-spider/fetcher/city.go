@@ -28,11 +28,10 @@ func (f *CityFetcher) Run() (result Result) {
 		fetcher := &ProfileFetcher{URL: string(match[1])}
 		result.SubFetchers = append(result.SubFetchers, fetcher)
 		result.Items = append(result.Items, string(match[2]))
-
-		if len(result.SubFetchers) > 1 {
-			util.TraceLog.Println("Finish fetch")
-			return
-		}
+		// if len(result.SubFetchers) > 1 {
+		// 	util.TraceLog.Println("Finish fetch")
+		// 	return
+		// }
 	}
 
 	return

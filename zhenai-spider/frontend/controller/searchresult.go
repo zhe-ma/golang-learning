@@ -10,7 +10,7 @@ import (
 	"zhenai-spider/frontend/view"
 	profile "zhenai-spider/model"
 
-	"github.com/olivere/elastic"
+	"github.com/olivere/elastic/v7"
 )
 
 type SearchResultHandler struct {

@@ -9,8 +9,11 @@
 
 <body>
   <div align="middle">
-    <input type="text" maxlength="100" style="width: 500px" name="query" value="{{.QueryString}}">
-    <button type="submit">搜索</button>
+    <img src="res/logo.png">
+    <form method="get">
+      <input type="text" maxlength="100" style="width: 500px" name="query" value="{{.QueryString}}">
+      <button type="submit">搜索</button>
+    </form>
   </div>
 
   <div align="middle">
@@ -24,8 +27,8 @@
         {{range .Items}}
         <tr>
           <td>{{.NickName}}</td>
-          <td>{{.Age}}</td>
-          <td>{{.Height}}</td>
+          <td>{{.Age}}岁</td>
+          <td>{{.Height}}cm</td>
           <td>{{.Education}}</td>
           <td>{{.Sex}}</td>
           <td>{{.WorkCity}}</td>
@@ -48,4 +51,5 @@
   </div>
 
 </body>
+
 </html>
