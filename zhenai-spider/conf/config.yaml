@@ -1,6 +1,0 @@
-spider:
-  host: http://10.196.102.145:9200
-  rateLimiter: 1
-
-frontend:
-  port: :9571
